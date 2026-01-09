@@ -1,0 +1,43 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1️⃣ Checkout the code
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2️⃣ Set up Docker Buildx (for better Docker builds)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # 3️⃣ Log in to Docker Hub
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    # 4️⃣ Build Docker image with Git commit SHA tag
+    - name: Build Docker image
+      run: |
+        IMAGE_NAME=ahmad779/my-python-site
+        IMAGE_TAG=${GITHUB_SHA::8}
+        docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$IMAGE_TAG .
+
+    # 5️⃣ Push Docker image to Docker Hub
+    - name: Push Docker image
+      run: |
+        IMAGE_NAME=ahmad779/my-python-site
+        IMAGE_TAG=${GITHUB_SHA::8}
+        docker push $IMAGE_NAME:latest
+        docker push $IMAGE_NAME:$IMAGE_TAG
